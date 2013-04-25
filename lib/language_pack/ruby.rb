@@ -83,6 +83,7 @@ class LanguagePack::Ruby < LanguagePack::Base
       create_database_yml
       install_binaries
       run_assets_precompile_rake_task
+      run_doc_generation_rake_task
     end
   end
 
@@ -603,6 +604,26 @@ params = CGI.parse(uri.query || "")
       time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake assets:precompile 2>&1") }
       if $?.success?
         puts "Asset precompilation completed (#{"%.2f" % time}s)"
+      end
+    end
+  end
+
+  # runs the rspec_api_documentation document generation task
+  def run_doc_generation_rake_task
+    log("docs_generate") do
+      if rake_task_defined?("docs:generate")
+        topic("Generating API Documentation")
+        puts "Running: rake docs:generate"
+        require 'benchmark'
+        time = Benchmark.realtime { pipe("env PATH=$PATH:bin bundle exec rake docs:generate 2>&1") }
+
+        if $?.success?
+          log "docs_generate", :status => "success"
+          puts "Document generation completed (#{"$.2f" % time}s)"
+        else
+          log "docs_generate", :status => "failure"
+          puts "Document generation failed"
+        end
       end
     end
   end
